@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.zhuonima</groupId>
-    <artifactId>lightsocks-netty</artifactId>
+    <artifactId>lightsocks-java</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <licenses>
@@ -23,6 +23,7 @@
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <netty.version>4.1.22.Final</netty.version>
         <lombok.version>1.16.20</lombok.version>
+        <common-codec.version>1.9</common-codec.version>
     </properties>
 
     <dependencies>
@@ -38,6 +39,13 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j-api.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${common-codec.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>junit</groupId>
