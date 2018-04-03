@@ -1,1 +1,1 @@
-# lightsocks-netty
+# lightsocks-java
