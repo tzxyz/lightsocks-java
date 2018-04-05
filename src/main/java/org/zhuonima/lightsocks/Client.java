@@ -10,6 +10,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class Client {
@@ -63,12 +64,13 @@ public class Client {
                     SocketChannel sc = (SocketChannel) key.channel();
                     sc.configureBlocking(false);
 
+                    test(sc);
                     // 读取src， 加密，写入remote
-                    SocketChannel remote = SocketChannel.open(this.remote);
-
-                    remote.configureBlocking(false);
-                    SelectionKey writeKey = remote.register(selector, SelectionKey.OP_WRITE);
-                    writeKey.attach(ByteBuffer.allocate(1024));
+//                    SocketChannel remote = SocketChannel.open(this.remote);
+//
+//                    remote.configureBlocking(false);
+//                    SelectionKey writeKey = remote.register(selector, SelectionKey.OP_WRITE);
+//                    writeKey.attach(ByteBuffer.allocate(1024));
 
                 } else if (key.isWritable()) {
                     ByteBuffer buffer = (ByteBuffer) key.attachment();
@@ -77,6 +79,24 @@ public class Client {
                 }
             }
         }
+
+    }
+
+    private void test(SocketChannel sc) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocate(4096);
+
+        sc.read(buffer);
+
+        buffer.flip();
+
+        int n = buffer.limit();
+
+        byte data[] = new byte[n];
+
+        buffer.get(data);
+
+        System.out.println(Arrays.toString(data));
 
     }
 }
