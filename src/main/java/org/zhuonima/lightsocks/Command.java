@@ -41,7 +41,7 @@ public class Command {
                 }
                 String password = args[0];
                 logger.info("use password: {}", password);
-                startClient();
+                startClient(password);
 
             } else {
                 help();
@@ -59,15 +59,20 @@ public class Command {
         System.exit(0);
     }
 
-    private void startServer() {
-        logger.info("Start Server. ");
+    private void startServer()  {
+        try {
+            Server server = new Server(new InetSocketAddress(8806));
+            server.serve();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
-    private void startClient() {
+    private void startClient(String password) {
         InetSocketAddress local = new InetSocketAddress(9999);
         InetSocketAddress remote = new InetSocketAddress(9090);
         try {
-            Client client = new Client(local, remote);
+            Client client = new Client(password, local, remote);
             client.listen();
             logger.info("Start Client. ");
         } catch (IOException e) {

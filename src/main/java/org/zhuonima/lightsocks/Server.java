@@ -1,7 +1,11 @@
 package org.zhuonima.lightsocks;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -16,11 +20,19 @@ public class Server {
 
     private final Selector selector = Selector.open();
 
+    private final Password password = PasswordFactory.newPassword();
+
+    private final Cipher cipher;
+
+    private final Logger logger = LoggerFactory.getLogger(Server.class);
+
     public Server(InetSocketAddress listen) throws IOException {
         this.listen = listen;
+        this.cipher = new Cipher(password);
         this.server.bind(listen);
         this.server.configureBlocking(false);
         this.server.register(selector, SelectionKey.OP_ACCEPT);
+        logger.info("Server listen at: {}:{}, using password: {}", listen.getHostString(), listen.getPort(), password.toString());
     }
 
     public void serve() throws IOException {
@@ -51,7 +63,10 @@ public class Server {
         }
     }
 
-    private void handle(SocketChannel sc) {
-
+    private void handle(SocketChannel sc) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(256);
+        byte[] data = buffer.array();
+        SecureSocketChannel secureSocketChannel = new SecureSocketChannel(cipher);
+        secureSocketChannel.decodeAndRead(sc, data);
     }
 }

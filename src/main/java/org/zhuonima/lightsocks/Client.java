@@ -5,12 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.Iterator;
 
 public class Client {
@@ -23,12 +21,15 @@ public class Client {
 
     private final Selector selector = Selector.open();
 
+    private final Cipher cipher;
+
     private final Logger logger = LoggerFactory.getLogger(Client.class);
 
-    public Client(InetSocketAddress local, InetSocketAddress remote) throws IOException {
+    public Client(String password, InetSocketAddress local, InetSocketAddress remote) throws IOException {
         this.local = local;
         this.remote = remote;
         this.serverSocketChannel = ServerSocketChannel.open();
+        this.cipher = new Cipher(PasswordFactory.parse(password));
     }
 
     public void listen() throws IOException {
@@ -53,9 +54,7 @@ public class Client {
                 if (key.isConnectable()) {
                     SocketChannel sc = (SocketChannel) key.channel();
                     sc.finishConnect();
-                    logger.debug("connect");
                 } else if (key.isAcceptable()) {
-                    logger.info("acc");
                     SocketChannel sc = serverSocketChannel.accept();
                     if (sc == null) continue;
                     sc.configureBlocking(false);
@@ -63,40 +62,20 @@ public class Client {
                 } else if (key.isReadable()) {
                     SocketChannel sc = (SocketChannel) key.channel();
                     sc.configureBlocking(false);
-
-                    test(sc);
-                    // 读取src， 加密，写入remote
-//                    SocketChannel remote = SocketChannel.open(this.remote);
-//
-//                    remote.configureBlocking(false);
-//                    SelectionKey writeKey = remote.register(selector, SelectionKey.OP_WRITE);
-//                    writeKey.attach(ByteBuffer.allocate(1024));
-
+                    SecureSocketChannel secureSocketChannel = new SecureSocketChannel(cipher);
+                    SocketChannel remote = secureSocketChannel.dialRemote(this.remote);
+                    remote.configureBlocking(false);
+                    secureSocketChannel.encodeCopy(sc, remote);
+                    SelectionKey writableKey = remote.register(selector, SelectionKey.OP_WRITE);
+                    writableKey.attach(sc);
                 } else if (key.isWritable()) {
-                    ByteBuffer buffer = (ByteBuffer) key.attachment();
-                    SocketChannel sc = (SocketChannel) key.channel();
-                    sc.write(buffer);
+                    SocketChannel remote = (SocketChannel) key.channel();
+                    SocketChannel sc = (SocketChannel) key.attachment();
+                    SecureSocketChannel secureSocketChannel = new SecureSocketChannel(cipher);
+                    secureSocketChannel.decodeCopy(remote, sc);
                 }
             }
         }
-
-    }
-
-    private void test(SocketChannel sc) throws IOException {
-
-        ByteBuffer buffer = ByteBuffer.allocate(4096);
-
-        sc.read(buffer);
-
-        buffer.flip();
-
-        int n = buffer.limit();
-
-        byte data[] = new byte[n];
-
-        buffer.get(data);
-
-        System.out.println(Arrays.toString(data));
 
     }
 }

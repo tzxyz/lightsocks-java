@@ -9,13 +9,11 @@ import java.util.Arrays;
 public class SecureSocketChannel {
 
     private final Cipher cipher;
-    private final InetSocketAddress remote;
 
     private final int bufferSize = 1024 * 4;
 
-    public SecureSocketChannel(Cipher cipher, InetSocketAddress remote) {
+    public SecureSocketChannel(Cipher cipher) {
         this.cipher = cipher;
-        this.remote = remote;
     }
 
     public int encodeAndWrite(SocketChannel channel, byte[] data) throws IOException {
@@ -62,7 +60,7 @@ public class SecureSocketChannel {
         }
     }
 
-    public SocketChannel dialRemote() throws IOException {
+    public SocketChannel dialRemote(InetSocketAddress remote) throws IOException {
         return SocketChannel.open(remote);
     }
 
