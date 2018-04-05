@@ -1,13 +1,16 @@
 package org.zhuonima.lightsocks;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Set;
 
 public class Client {
 
@@ -19,6 +22,8 @@ public class Client {
 
     private final Selector selector = Selector.open();
 
+    private final Logger logger = LoggerFactory.getLogger(Client.class);
+
     public Client(InetSocketAddress local, InetSocketAddress remote) throws IOException {
         this.local = local;
         this.remote = remote;
@@ -27,32 +32,48 @@ public class Client {
 
     public void listen() throws IOException {
         this.serverSocketChannel.bind(local);
+        this.serverSocketChannel.configureBlocking(false);
         this.serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        logger.info("Bind local address: {}:{}", local.getHostString(), local.getPort());
+        handle();
     }
 
-    public void handle() throws IOException {
+    private void handle() throws IOException {
 
         while (true) {
             int n = selector.selectNow();
 
             if (n < 0) continue;
 
-            Set<SelectionKey> keys = selector.selectedKeys();
 
-            Iterator<SelectionKey> iterator = keys.iterator();
-
-            while (iterator.hasNext()) {
+            for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
                 SelectionKey key = iterator.next();
-
-                if (key.isAcceptable()) {
-                    SocketChannel socketChannel = (SocketChannel) key.channel();
-                    socketChannel.configureBlocking(false);
-                    socketChannel.register(selector, SelectionKey.OP_READ);
+                iterator.remove();
+                if (key.isConnectable()) {
+                    SocketChannel sc = (SocketChannel) key.channel();
+                    sc.finishConnect();
+                    logger.debug("connect");
+                } else if (key.isAcceptable()) {
+                    logger.info("acc");
+                    SocketChannel sc = serverSocketChannel.accept();
+                    if (sc == null) continue;
+                    sc.configureBlocking(false);
+                    sc.register(selector, SelectionKey.OP_READ);
                 } else if (key.isReadable()) {
-                    SocketChannel socketChannel = (SocketChannel) key.channel();
-                    socketChannel.configureBlocking(false);
-                } else if (key.isWritable()) {
+                    SocketChannel sc = (SocketChannel) key.channel();
+                    sc.configureBlocking(false);
 
+                    // 读取src， 加密，写入remote
+                    SocketChannel remote = SocketChannel.open(this.remote);
+
+                    remote.configureBlocking(false);
+                    SelectionKey writeKey = remote.register(selector, SelectionKey.OP_WRITE);
+                    writeKey.attach(ByteBuffer.allocate(1024));
+
+                } else if (key.isWritable()) {
+                    ByteBuffer buffer = (ByteBuffer) key.attachment();
+                    SocketChannel sc = (SocketChannel) key.channel();
+                    sc.write(buffer);
                 }
             }
         }

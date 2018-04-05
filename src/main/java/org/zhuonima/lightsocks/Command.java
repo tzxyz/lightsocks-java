@@ -4,6 +4,9 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 public class Command {
 
     private static final Logger logger = LoggerFactory.getLogger(Command.class);
@@ -32,7 +35,14 @@ public class Command {
             } else if (cmd.hasOption("s")){
                 startServer();
             } else if (cmd.hasOption("c")) {
+                String args[] = cmd.getArgs();
+                if (args.length <= 0) {
+                    throw new RuntimeException();
+                }
+                String password = args[0];
+                logger.info("use password: {}", password);
                 startClient();
+
             } else {
                 help();
             }
@@ -54,6 +64,14 @@ public class Command {
     }
 
     private void startClient() {
-        logger.info("Start Client. ");
+        InetSocketAddress local = new InetSocketAddress(9999);
+        InetSocketAddress remote = new InetSocketAddress(9090);
+        try {
+            Client client = new Client(local, remote);
+            client.listen();
+            logger.info("Start Client. ");
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 }
