@@ -41,12 +41,9 @@ public class SecureSocketChannel {
 
     public void encodeCopy(SocketChannel src, SocketChannel dst) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-        while (true) {
-            int n = src.read(buffer);
-            if (n > 0) {
-                buffer.flip();
-                this.encodeAndWrite(dst, Arrays.copyOf(buffer.array(), n));
-            } else return;
+        for (int n = src.read(buffer); n != -1;) {
+            buffer.flip();
+            this.encodeAndWrite(dst, Arrays.copyOf(buffer.array(), n));
         }
     }
 

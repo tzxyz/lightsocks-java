@@ -46,7 +46,7 @@ public class Client {
             int n = selector.select();
 
             if (n == 0) continue;
-            
+
             for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
                 SelectionKey key = iterator.next();
                 iterator.remove();
@@ -65,8 +65,7 @@ public class Client {
                     SocketChannel remote = secureSocketChannel.dialRemote(this.remote);
                     remote.configureBlocking(false);
                     secureSocketChannel.encodeCopy(sc, remote);
-                    SelectionKey writableKey = remote.register(selector, SelectionKey.OP_WRITE);
-                    writableKey.attach(sc);
+                    remote.register(selector, SelectionKey.OP_WRITE, sc);
                 } else if (key.isWritable()) {
                     SocketChannel remote = (SocketChannel) key.channel();
                     SocketChannel sc = (SocketChannel) key.attachment();
