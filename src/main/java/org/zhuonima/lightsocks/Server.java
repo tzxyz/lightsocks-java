@@ -40,6 +40,8 @@ public class Server {
 
     public void serve() throws IOException {
         for (; ; ) {
+            int n = selector.select();
+            if (n < 0) continue;
             for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
                 SelectionKey key = iterator.next();
                 iterator.remove();

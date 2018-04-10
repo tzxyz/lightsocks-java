@@ -70,7 +70,7 @@ public class Command {
 
     private void startClient(String password) {
         InetSocketAddress local = new InetSocketAddress(9999);
-        InetSocketAddress remote = new InetSocketAddress(9090);
+        InetSocketAddress remote = new InetSocketAddress(8806);
         try {
             Client client = new Client(password, local, remote);
             client.listen();

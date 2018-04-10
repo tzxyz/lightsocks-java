@@ -43,7 +43,7 @@ public class Client {
     private void handle() throws IOException {
 
         while (true) {
-            int n = selector.selectNow();
+            int n = selector.select();
 
             if (n < 0) continue;
 
