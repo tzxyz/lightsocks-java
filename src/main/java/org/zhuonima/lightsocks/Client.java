@@ -45,9 +45,8 @@ public class Client {
         while (true) {
             int n = selector.select();
 
-            if (n < 0) continue;
-
-
+            if (n == 0) continue;
+            
             for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
                 SelectionKey key = iterator.next();
                 iterator.remove();
